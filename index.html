@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History Project - Regional Satyagraha</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;600;700&family=Noto+Sans+Bengali:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-dark: #1a120b;
+            --secondary-dark: #2c1e12;
+            --accent-gold: #d4a373;
+            --accent-light: #faedcd;
+            --accent-orange: #bc6c25;
+            --text-light: #fefae0;
+            --text-gray: #ccd5ae;
+            --error-red: #ff6b6b;
+            --border-radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans Bengali', sans-serif;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #3d2b1f 100%);
+            color: var(--text-gray);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- AUTH MODAL --- */
+        #details-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.98); backdrop-filter: blur(15px);
+            z-index: 10000; display: flex; justify-content: center; align-items: center; padding: 20px;
+        }
+        .modal-card {
+            background: var(--secondary-dark); border: 2px solid var(--accent-gold);
+            padding: 2.5rem; border-radius: var(--border-radius); max-width: 480px; width: 100%;
+            box-shadow: 0 0 50px rgba(212, 163, 115, 0.2);
+            position: relative;
+        }
+        .modal-card h2 { color: var(--accent-gold); text-align: center; margin-bottom: 1.5rem; font-family: 'Cinzel', serif; }
+        
+        .input-group { margin-bottom: 1rem; }
+        .input-group label { display: block; color: var(--accent-gold); margin-bottom: 5px; font-size: 0.8rem; text-transform: uppercase; }
+        .input-group input {
+            width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(212, 163, 115, 0.3);
+            color: white; border-radius: 8px; outline: none; font-size: 1rem; transition: 0.3s;
+        }
+        .input-group input:focus { border-color: var(--accent-orange); box-shadow: 0 0 10px rgba(188, 108, 37, 0.3); }
+        .input-group input:read-only { background: rgba(212, 163, 115, 0.1); color: var(--accent-gold); border-color: var(--accent-orange); cursor: not-allowed; }
+
+        /* INLINE ERROR MESSAGE */
+        .msg-box {
+            min-height: 24px; margin-top: 10px; margin-bottom: 10px;
+            font-size: 0.9rem; text-align: center; font-weight: 600;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .msg-error { color: var(--error-red); opacity: 1; }
+        .msg-info { color: var(--accent-light); opacity: 1; }
+
+        /* --- CUSTOM ANGRY MODAL --- */
+        #custom-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); z-index: 20000;
+            justify-content: center; align-items: center; padding: 20px;
+            animation: fadeIn 0.3s;
+        }
+        .custom-box {
+            background: linear-gradient(145deg, #2c0b0b, #1a0505);
+            border: 3px double var(--accent-gold);
+            padding: 30px; border-radius: 15px; text-align: center;
+            max-width: 400px; width: 100%;
+            box-shadow: 0 0 30px rgba(255, 107, 107, 0.2);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .custom-icon { font-size: 3rem; color: var(--error-red); margin-bottom: 15px; }
+        .custom-title { font-family: 'Cinzel', serif; color: var(--accent-gold); font-size: 1.5rem; margin-bottom: 10px; }
+        .custom-msg { color: #ffe5d9; font-size: 1.1rem; margin-bottom: 25px; line-height: 1.5; white-space: pre-line; }
+        .custom-btn {
+            background: var(--accent-gold); color: #2c0b0b; border: none;
+            padding: 10px 30px; font-size: 1rem; font-weight: bold; font-family: 'Cinzel', serif;
+            border-radius: 50px; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 5px 15px rgba(212, 163, 115, 0.3);
+        }
+        .custom-btn:hover { transform: scale(1.05); background: var(--accent-light); }
+
+        /* LOADING STATUS */
+        #ai-status {
+            display: none; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 8px;
+            margin-bottom: 10px; border: 1px solid rgba(212, 163, 115, 0.2); font-size: 0.85rem; text-align: center;
+        }
+
+        .submit-btn {
+            width: 100%; padding: 15px; background: var(--accent-gold); color: var(--primary-dark);
+            border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s;
+            font-size: 1rem; text-transform: uppercase;
+        }
+        .submit-btn:disabled { opacity: 0.6; cursor: wait; }
+
+        /* --- MAIN UI --- */
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; display: none; }
+        .header {
+            background: rgba(44, 30, 18, 0.9); border-radius: var(--border-radius); padding: 1.5rem; 
+            margin-bottom: 30px; border: 1px solid rgba(212, 163, 115, 0.2); position: sticky; top: 20px; z-index: 100;
+        }
+        .project-title h1 { font-family: 'Noto Serif Bengali', serif; color: var(--accent-gold); font-size: 1.8rem; text-align: center; }
+
+        .nav-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 15px; }
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(212, 163, 115, 0.1);
+            color: var(--text-light); padding: 8px 16px; cursor: pointer; border-radius: 20px; font-size: 0.85rem; transition: 0.3s;
+        }
+        .nav-btn:hover, .nav-btn.active { background: var(--accent-gold); color: var(--primary-dark); }
+
+        .page-content { display: none; background: rgba(44, 30, 18, 0.7); padding: 40px; border-radius: var(--border-radius); border: 1px solid rgba(212, 163, 115, 0.1); animation: fadeIn 0.5s; }
+        .active-page { display: block; }
+        
+        h2 { font-family: 'Noto Serif Bengali', serif; color: var(--accent-gold); border-bottom: 2px solid var(--accent-orange); display: inline-block; padding-bottom: 5px; margin-bottom: 1.5rem; font-size: 2rem; }
+        h3 { color: var(--accent-light); margin: 2rem 0 1rem; border-left: 4px solid var(--accent-gold); padding-left: 15px; font-size: 1.5rem; }
+        p { margin-bottom: 1.2rem; text-align: justify; font-size: 1.15rem; color: var(--text-gray); }
+
+        /* Cover Page Styling */
+        .front-page-wrapper { 
+            text-align: center; border: 3px double var(--accent-gold); 
+            padding: 50px 30px; border-radius: var(--border-radius);
+            background: rgba(0,0,0,0.2);
+        }
+        .school-name { 
+            font-family: 'Cinzel Decorative', cursive; font-size: 2.6rem; 
+            color: var(--accent-gold); margin-bottom: 15px; letter-spacing: 1px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+        }
+        .main-topic { 
+            font-size: 2.2rem; color: var(--accent-orange); margin: 3rem 0; padding: 2rem; 
+            border-top: 1px solid var(--accent-gold); border-bottom: 1px solid var(--accent-gold);
+            font-family: 'Cinzel', serif; font-weight: 700; background: rgba(188, 108, 37, 0.05);
+        }
+        .details-table { margin: 2rem auto; width: 100%; max-width: 650px; border-collapse: separate; border-spacing: 0 10px; }
+        .details-table td { 
+            padding: 15px; border-bottom: 1px solid rgba(212, 163, 115, 0.3); 
+            text-align: left; color: #fefae0; font-family: 'Playfair Display', serif; font-size: 1.2rem;
+        }
+        .details-table td:first-child { 
+            font-weight: 600; color: var(--accent-gold); width: 40%; text-transform: uppercase;
+            font-size: 0.95rem; font-family: 'Cinzel', serif; letter-spacing: 1px;
+        }
+
+        .project-img { width: 100%; max-width: 600px; display: block; margin: 25px auto; border-radius: 8px; border: 2px solid var(--accent-gold); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+        .img-caption { text-align: center; font-style: italic; color: var(--accent-gold); font-size: 0.95rem; margin-top: -15px; margin-bottom: 30px; }
+        .footer { text-align: center; padding: 30px; color: var(--accent-gold); font-size: 0.9rem; border-top: 1px solid rgba(212, 163, 115, 0.1); margin-top: 40px; font-family: sans-serif; }
+        .highlight-box { background: rgba(188, 108, 37, 0.1); padding: 20px; border-radius: 8px; border-left: 4px solid var(--accent-orange); margin: 1.5rem 0; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<!-- Authentication Overlay -->
+<div id="details-overlay">
+    <div class="modal-card">
+        <h2>Student Authentication</h2>
+        
+        <div class="input-group">
+            <label>Student's Name</label>
+            <input type="text" id="Name" placeholder="Full Name (Ex: Shantanu Thakur)" oninput="clearMsg(); checkPresets(this.value)">
+        </div>
+        <div class="input-group">
+            <label>Classes & Sections</label>
+            <input type="text" value="XII (Arts)" disabled>
+        </div>
+        <div class="input-group">
+            <label>Roll No</label>
+            <input type="number" id="Roll" placeholder="e.g. 30" oninput="clearMsg()">
+        </div>
+        <div class="input-group">
+            <label>Registration No (4241162###)</label>
+            <input type="text" id="Reg" placeholder="4241162..." maxlength="10" oninput="clearMsg()">
+        </div>
+
+        <div id="ai-status">
+            <span id="ai-icon">⏳</span> <span id="ai-text">Checking validity...</span>
+        </div>
+        
+        <!-- Inline Error Messages -->
+        <div id="msg-box" class="msg-box"></div>
+
+        <button class="submit-btn" id="startBtn" onclick="startQuiz()">Proceed to Project</button>
+    </div>
+</div>
+
+<!-- Custom "Angry" Modal -->
+<div id="custom-modal">
+    <div class="custom-box">
+        <div class="custom-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="custom-title" id="modal-title">WARNING!</div>
+        <div class="custom-msg" id="modal-msg">Error Message Goes Here</div>
+        <button class="custom-btn" onclick="closeCustomModal()">OK</button>
+    </div>
+</div>
+
+<div class="container" id="main-container">
+    <header class="header">
+        <div class="project-title">
+            <h1>ইতিহাস প্রকল্প: গান্ধীজির নেতৃত্বে আঞ্চলিক সত্যাগ্রহ</h1>
+        </div>
+        <nav class="nav-bar">
+            <button class="nav-btn active" onclick="showPage('front')">Cover Page</button>
+            <button class="nav-btn" onclick="showPage('index')">Index</button>
+            <button class="nav-btn" onclick="showPage('ack')">Acknowledgement</button>
+            <button class="nav-btn" onclick="showPage('intro')">Introduction</button>
+            <button class="nav-btn" onclick="showPage('body')">Main Discussion</button>
+            <button class="nav-btn" onclick="showPage('conclusion')">Conclusion</button>
+        </nav>
+    </header>
+
+    <div class="content-wrapper">
+        <div id="front" class="page-content active-page">
+            <div class="front-page-wrapper">
+                <div class="school-name">Dakshin Nangla K. U. Institution</div>
+                <div class="main-topic">Regional Satyagraha under the Leadership of Gandhiji</div>
+                <table class="details-table">
+                    <tr><td>Student's Name</td><td id="display-name">---</td></tr>
+                    <tr><td>Classes & Sections</td><td>XII (Arts)</td></tr>
+                    <tr><td>Roll No</td><td id="display-roll">---</td></tr>
+                    <tr><td>Registration No</td><td id="display-reg">---</td></tr>
+                    <tr><td>Subject</td><td>History</td></tr>
+                    <tr><td>Academic Session</td><td>2025 - 2026</td></tr>
+                </table>
+            </div>
+        </div>
+        <div id="index" class="page-content">
+            <h2>সূচিপত্র (Index)</h2>
+            <ul style="list-style: none; padding: 0; font-size: 1.2rem;">
+                <li style="padding: 15px; border-bottom: 1px solid rgba(212,163,115,0.2);">১. কৃতজ্ঞতা স্বীকার (Acknowledgement)</li>
+                <li style="padding: 15px; border-bottom: 1px solid rgba(212,163,115,0.2);">২. ভূমিকা: ভারতের রাজনীতিতে গান্ধীজির আগমন</li>
+                <li style="padding: 15px; border-bottom: 1px solid rgba(212,163,115,0.2);">৩. চম্পারণ সত্যাগ্রহ (১৯১৭) - প্রেক্ষাপট ও ফলাফল</li>
+                <li style="padding: 15px; border-bottom: 1px solid rgba(212,163,115,0.2);">৪. আমেদাবাদ সুতাকল ধর্মঘট (১৯১৮) - অনশন নীতি</li>
+                <li style="padding: 15px; border-bottom: 1px solid rgba(212,163,115,0.2);">৫. খেড়া সত্যাগ্রহ (১৯১৮) - সর্দার প্যাটেলের ভূমিকা</li>
+                <li style="padding: 15px; border-bottom: 1px solid rgba(212,163,115,0.2);">৬. আঞ্চলিক আন্দোলনের গুরুত্ব ও বৈশিষ্ট্য</li>
+                <li style="padding: 15px; border-bottom: 1px solid rgba(212,163,115,0.2);">৭. উপসংহার (Conclusion)</li>
+            </ul>
+        </div>
+        <div id="ack" class="page-content">
+            <h2>কৃতজ্ঞতা স্বীকার</h2>
+            <p>আমি প্রথমেই আমার পরম শ্রদ্ধেয় ইতিহাস বিষয়ের শিক্ষক মহাশয়ের প্রতি আমার আন্তরিক কৃতজ্ঞতা জানাচ্ছি। তিনি আমাকে এই প্রকল্পটি নির্বাচন করতে এবং তথ্য সংগ্রহ করতে অসামান্য সাহায্য করেছেন। তাঁর মূল্যবান পরামর্শ ছাড়া এই প্রকল্পটি সম্পন্ন করা আমার পক্ষে সম্ভব হতো না।</p>
+            <p>সবশেষে আমার পরিবারের সদস্যদের ধন্যবাদ জানাই যারা তথ্য সংগ্রহে আমাকে নানাভাবে সহযোগিতা করেছেন।</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 60px;">
+                <div style="border-top: 1px solid var(--accent-gold); padding-top: 10px; text-align: center;">শিক্ষার্থীর স্বাক্ষর</div>
+                <div style="border-top: 1px solid var(--accent-gold); padding-top: 10px; text-align: center;">শিক্ষকের স্বাক্ষর</div>
+            </div>
+        </div>
+        <div id="intro" class="page-content">
+            <h2>ভূমিকা</h2>
+            <p>১৯১৫ সালের ৯ জানুয়ারি মহাত্মা গান্ধী দীর্ঘ ২১ বছর দক্ষিণ আফ্রিকায় বর্ণবিদ্বেষের বিরুদ্ধে লড়াই শেষ করে ভারতে ফিরে আসেন। দক্ষিণ আফ্রিকায় থাকাকালীন তিনি তাঁর রাজনৈতিক অস্ত্র <strong>'সত্যাগ্রহ'</strong>-এর সফল প্রয়োগ ঘটিয়েছিলেন। ভারতে ফিরে তিনি তাঁর রাজনৈতিক গুরু <strong>গোপালকৃষ্ণ গোখলের</strong> পরামর্শে এক বছর কোনো প্রত্যক্ষ রাজনীতিতে অংশ না নিয়ে সমগ্র ভারত ভ্রমণ করেন।</p>
+            <div class="highlight-box"><strong>সত্যাগ্রহের আদর্শ:</strong> 'সত্য' ও 'আগ্রহ' - এই দুটি শব্দের সমন্বয়ে সত্যাগ্রহ গঠিত।</div>
+        </div>
+        <div id="body" class="page-content">
+            <h2>আঞ্চলিক সত্যাগ্রহের বিস্তারিত আলোচনা</h2>
+            <h3>১. চম্পারণ সত্যাগ্রহ (১৯১৭) - বিহার</h3>
+            <p>বিহারের চম্পারণ জেলায় নীলকর সাহেবরা ভারতীয় চাষিদের ওপর চরম শোষণ চালাত। সেখানে প্রচলিত ছিল কুখ্যাত 'তিনকাঠিয়া' প্রথা।</p>
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTj9zZlX9rPErsVTF9hmtjegCMwyXsmM5vs-Cg3lVUKhQ&s=10" class="project-img">
+            <div class="img-caption">চম্পারণ সত্যাগ্রহে তদন্ত কমিটির সাথে গান্ধীজি</div>
+            <h3>২. আমেদাবাদ সুতাকল ধর্মঘট (১৯১৮) - গুজরাট</h3>
+            <p>১৯১৮ সালে গুজরাটের আমেদাবাদের সুতাকলগুলিতে 'প্লেগ বোনাস' নিয়ে মালিক ও শ্রমিকদের মধ্যে তীব্র বিবাদ দেখা দেয়।</p>
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR6zNw4nR5itp9ETL8mtEBh-JrYNKXTLN6lqrZ597U_5A&s=10" class="project-img">
+            <div class="img-caption">আমেদাবাদের সবরমতী আশ্রমে গান্ধীজি</div>
+            <h3>৩. খেড়া সত্যাগ্রহ (১৯১৮) - গুজরাট</h3>
+            <p>১৯১৮ সালে গুজরাটের খেড়া জেলায় অনাবৃষ্টির কারণে ব্যাপক শস্যহানি ঘটে। গান্ধীজি কৃষকদের পরামর্শ দেন খাজনা না দেওয়ার জন্য।</p>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/1/11/Gandhi_Kheda_1918.jpg" class="project-img">
+            <div class="img-caption">মহাত্মা গান্ধী 1918 সালে, যখন তিনি খেদা সত্যাগ্রহের নেতৃত্ব দেন</div>
+        </div>
+        <div id="conclusion" class="page-content">
+            <h2>উপসংহার</h2>
+            <p>মহাত্মা গান্ধীর নেতৃত্বে চম্পারণ, আমেদাবাদ এবং খেড়া সত্যাগ্রহ ছিল ভারতীয় স্বাধীনতা সংগ্রামের ইতিহাসে এক সন্ধিক্ষণ।</p>
+        </div>
+    </div>
+    <div class="footer">
+        <p>Project Creator: <span id="footer-name">---</span> | Dakshin Nangla K. U. Institution</p>
+        <p>© 2025 - 2026 Academic Year | All Rights Reserved</p>
+    </div>
+</div>
+
+<script>
+  // MODIFIED TO BE STRICT: No Internet = No Entry
+  window.verifyWithGemini = async (name) => {
+    // 1. Check for basic connectivity first
+    if (!navigator.onLine) {
+        return 'error';
+    }
+
+    const apiKey = "AIzaSyCXwMCQ7omofKvujSCCGbmFG8l2fdEhLs4"; // Injected by system
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+    
+    const requestBody = {
+      contents: [{ parts: [{ text: `Analyze this name: "${name}". Is it a plausible human name or random gibberish? Respond ONLY with "valid" or "invalid".` }] }]
+    };
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 sec strict timeout
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            return 'error'; // API Failure is NOT a pass anymore
+        }
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.toLowerCase() || "";
+        
+        // Return explicit status
+        return text.includes("invalid") ? 'invalid' : 'valid';
+
+    } catch (e) {
+        // Any network error/timeout returns 'error' to block access
+        return 'error'; 
+    }
+  };
+</script>
+
+<script>
+    let clickCount = 0;
+    let displayclickCount = 0;
+    
+    function showInlineMsg(text) {
+        const box = document.getElementById('msg-box');
+        box.textContent = text;
+        box.className = 'msg-box msg-error';
+        box.style.transform = "translateX(5px)";
+        setTimeout(() => box.style.transform = "translateX(-5px)", 50);
+        setTimeout(() => box.style.transform = "translateX(0)", 100);
+    }
+
+    function clearMsg() {
+        const box = document.getElementById('msg-box');
+        box.textContent = ""; box.className = 'msg-box';
+    }
+
+    function showCustomModal(title, msg) {
+        document.getElementById('modal-title').textContent = title;
+        document.getElementById('modal-msg').textContent = msg;
+        document.getElementById('custom-modal').style.display = 'flex';
+    }
+
+    function closeCustomModal() {
+        document.getElementById('custom-modal').style.display = 'none';
+        clickCount = 0; 
+    }
+
+    function handleError(specificMsg) {
+        clickCount++;
+        displayclickCount++;
+
+        if (clickCount >= 3) {
+            const angryMsgs = [
+                "Ye mazak chal raha hai kya? 😡😂",
+                "Bas kar bhai, dimaag ka dahi ho gaya! 😤🤯",
+                "Tere andar to talent ki dukan hai! 🤡🤣",
+                "Kya chalu aadmi hai tu! 🚨😒",
+                "Abhi tak seekha nahi? Kaise chalega bhai! 😑🤦",
+                "Oye! Coding ko comedy mat bana! 🤓🙄",
+                "Maa kasam, dimaag ghoom gaya ab! 😠💫",
+                "Tu developer hai ya comedian? 🤨😂",
+                `${displayclickCount} baar? Tere intentions theek nahi lag rahe! 🤔😆`,
+                "Pehle galti, fir dobaara? Tu seekhne nahi aaya lagta! 📚❌",
+                "Aree bhai, naam likhne mein PhD chahiye kya? 🧠💣",
+                "Kya kar raha hai bhai tu? System hang kar dega! 🖥️🔥",
+                "Tu to AI ka bhi baap nikla! 🧠🫠",
+                "Lagta hai form se dosti karli hai! 😏📝",
+                "Galtiyon ka tsunami aa gaya bhai! 🌊😂",
+                "Abe hatt! Ye naam hai ya nuclear password? 💣😂"
+            ];
+            showCustomModal("WARNING!", angryMsgs[Math.floor(Math.random() * angryMsgs.length)] + "\n\n(Error: " + specificMsg + ")");
+        } else {
+            showInlineMsg(specificMsg);
+        }
+    }
+
+    function checkPresets(name) {
+        const roll = document.getElementById('Roll');
+        const reg = document.getElementById('Reg');
+        roll.readOnly = false; reg.readOnly = false;
+        
+        if (name === "Rana Biswas") {
+            roll.value = 34; roll.readOnly = true;
+            reg.value = "4241162321"; reg.readOnly = true;
+        } else if (name === "Sourav Mali") {
+            roll.value = 33; roll.readOnly = true;
+            reg.value = "4241162341"; reg.readOnly = true;
+        } else if (name === "Avijit Mondal") {
+            reg.value = "4241162368"; reg.readOnly = true;
+        }
+    }
+
+    async function startQuiz() {
+        const nameInput = document.getElementById('Name');
+        const rollInput = document.getElementById('Roll');
+        const regInput = document.getElementById('Reg');
+        const playerName = nameInput.value.trim();
+        const roll = rollInput.value.trim();
+        const reg = regInput.value.trim();
+
+        // 1. BYPASS PRESETS
+        const presets = ["Rana Biswas", "Sourav Mali", "Avijit Mondal", "Shantanu Thakur"];
+        if (presets.includes(playerName)) { proceed(playerName, roll, reg); return; }
+
+        // 2. EMPTY CHECK
+        if (!playerName || !roll || !reg) {
+            handleError("All fields are required!");
+            return;
+        }
+
+        // 3. BLOCKED WORDS CHECK
+        const blockedWords = ["daku", "king", "kong", "dil", "dill", "chor", "free", "fire", "boyfriend", "girlfriend", "friend", "fuck", "shit", "bitch", "asshole", "bastard", "dick", "pussy", "cunt", "fucker", "motherfucker", "nigger", "retard", "slut", "whore", "damn", "hell", "crap", "bollocks", "wanker", "arse", "nigga", "twat", "douche", "jerk", "fag", "faggot", "suck", "cock", "boob", "tit", "porn", "sex", "rape", "kill", "murder", "hacker", "admin", "owner", "null", "undefined", "test", "root", "error", "xxx", "gay", "lesbian", "roblox", "minecraft", "freefire", "pubg", "fortnite", "valorant", "callofduty", "amongus", "clashofclans", "clashroyale", "bgmi", "gta", "apex", "avengers", "batman", "spiderman", "joker", "ironman", "oppenheimer", "kgf", "pushpa", "rrr", "animal", "jawan", "pathaan", "dhoom", "sholay", "gadar", "squidgame", "moneyheist", "breakingbad", "got", "mirzapur", "sacredgames", "stupid", "idiot", "loser", "noob", "trash", "ugly", "dumb", "shut", "up", "die", "dead", "cheat", "mod", "depressed", "suicide", "sad", "angry", "lonely", "hate", "anxiety", "fear", "cry", "server", "system", "console", "localhost", "asdf", "qwerty", "1234", "abc", "aaa", "zzz", "lol", "omg", "wtf", "lmao", "rofl"];
+        
+        for (let i = 0; i < blockedWords.length; i++) {
+            if (playerName.toLowerCase().includes(blockedWords[i].toLowerCase())) {
+                handleError("The word \"" + blockedWords[i] + "\" is blocked by owner!");
+                return;
+            }
+        }
+
+        // 4. DETAILED VALIDATION LOGIC
+        const parts = playerName.trim().split(/\s+/);
+        const firstLetter = parts[0] || "";
+        const lastLetter = parts[1] || "";
+        const word = parts[1] || "";
+
+        if (/\p{Emoji}/u.test(playerName)) {
+            handleError("Emojis are not allowed in names!");
+        }
+        else if (/[A-Z]{2,}/.test(playerName) || playerName !== playerName.trim()) {
+            handleError("Please avoid extra capital letters in your name!");
+        }
+        else if (/\s{2,}/.test(playerName)) {
+            handleError("Please avoid extra spaces in your name!");
+        }
+        else if (/\d/.test(playerName)) {
+            handleError("Names cannot contain numbers!");
+        }
+        else if (parts.length >= 2 && parts[0].toLowerCase() === parts[1].toLowerCase()) {
+            handleError("First and last names should not be the same!");
+        }
+        else if (playerName.length > 20) {
+            handleError("Name is too long!");
+        }
+        else if (/([a-zA-Z])\1{3,}/.test(playerName)) {
+            handleError("Too many repeated letters!");
+        }
+        else if (/Raj.*Kumar/i.test(playerName)) {
+            handleError("The Name " + playerName + " Is Blocked By Owner!");
+        }
+        else if (firstLetter.length < 3) {
+            handleError("Please Enter A Valid First Name (Min 3 chars)!");
+        }
+        else if (word.length < 2) {
+            handleError("Enter Last Name (Min 2 chars)!");
+        }
+        else if (!/^[A-Z]/.test(firstLetter)) {
+            handleError("First Name's First Letter Must be Capital!");
+        }
+        else if (lastLetter.length < 4) {
+            handleError("Please Enter A Valid Last Name (Min 4 chars)!");
+        }
+        else if (!/^[A-Z]/.test(lastLetter)) {
+            handleError("Last Name's First Letter Must be Capital!");
+        }
+        else if (!/^4241162\d{3}$/.test(reg)) {
+            handleError("Registration must be 10 digits starting with 4241162!");
+        }
+        else {
+            // 5. AI VALIDATION (Strict Mode)
+            const btn = document.getElementById('startBtn');
+            const aiStatus = document.getElementById('ai-status');
+            const aiText = document.getElementById('ai-text');
+            
+            btn.disabled = true; 
+            aiStatus.style.display = 'block'; 
+            aiText.textContent = "AI Verifying Name (Internet Required)...";
+            clearMsg();
+            
+            const verificationResult = await window.verifyWithGemini(playerName);
+            
+            if (verificationResult === 'error') {
+                handleError("⚠️ Internet Required! AI verification failed. Please check your connection.");
+                aiStatus.style.display = 'none';
+                btn.disabled = false;
+            } else if (verificationResult === 'invalid') {
+                handleError("AI: This name looks fake. Please use your real identity.");
+                aiStatus.style.display = 'none'; 
+                btn.disabled = false;
+            } else {
+                // Success
+                proceed(playerName, roll, reg);
+            }
+        }
+    }
+
+    function proceed(name, roll, reg) {
+        localStorage.setItem("Project_Name", name);
+        localStorage.setItem("Project_Roll", roll);
+        localStorage.setItem("Project_Reg", reg);
+        document.getElementById('display-name').textContent = name;
+        document.getElementById('display-roll').textContent = roll;
+        document.getElementById('display-reg').textContent = reg;
+        document.getElementById('footer-name').textContent = name;
+        document.getElementById('details-overlay').style.display = 'none';
+        document.getElementById('main-container').style.display = 'block';
+    }
+
+    function showPage(id) {
+        document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active-page'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active-page');
+        const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick').includes(id));
+        if (btn) btn.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    window.onload = () => {
+        const n = localStorage.getItem("Project_Name");
+        if (n) proceed(n, localStorage.getItem("Project_Roll"), localStorage.getItem("Project_Reg"));
+    }
+</script>
+
+</body>
+</html>
+
+
